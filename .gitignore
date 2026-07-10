@@ -1,0 +1,29 @@
+# React
+frontend/node_modules/
+frontend/dist/
+
+# Python
+backend/venv/
+backend/__pycache__/
+**/__pycache__/
+*.pyc
+
+# Environment
+.env
+
+# Uploads
+backend/uploads/
+uploads/
+
+# YOLO outputs
+runs/
+
+# AI Models
+*.pt
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# VS Code
+.vscode/
