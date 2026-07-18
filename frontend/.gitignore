@@ -22,3 +22,18 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+# ==========================
+# Python
+# ==========================
+backend/venv/
+backend/__pycache__/
+backend/**/*.pyc
+
+# Environment variables
+backend/.env
+
+# Uploads (optional)
+backend/uploads/
+
+# YOLO model (optional, if downloaded locally)
+backend/yolov8n.ptcd

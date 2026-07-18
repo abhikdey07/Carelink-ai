@@ -8,6 +8,24 @@ export default function DeliveryManagement() {
 
   const [deliveries, setDeliveries] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const formatPickupTime = (time: string) => {
+  switch (time) {
+    case "09:00:00":
+      return "09:00 AM - 11:00 AM";
+
+    case "11:00:00":
+      return "11:00 AM - 01:00 PM";
+
+    case "14:00:00":
+      return "02:00 PM - 04:00 PM";
+
+    case "16:00:00":
+      return "04:00 PM - 06:00 PM";
+
+    default:
+      return time;
+  }
+};
 
   useEffect(() => {
     loadDeliveries();
@@ -101,7 +119,7 @@ export default function DeliveryManagement() {
                 </p>
 
                 <p>
-                  <b>Pickup Time:</b> {delivery.pickup_time}
+                  <b>Pickup Time:</b> {formatPickupTime(delivery.pickup_time)}
                 </p>
 
                 <p>

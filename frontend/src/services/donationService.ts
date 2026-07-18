@@ -6,7 +6,7 @@ export interface DonationItem {
 
   quantity: number;
 
-  confidence: number;
+  confidence: number | null;
 
   condition: string;
 

@@ -43,6 +43,28 @@ const ngoId = user.ngo_id;
     }
 
   };
+  const formatPickupTime = (time: string | null) => {
+
+  if (!time) return "--";
+
+  switch (time) {
+
+    case "09:00:00":
+      return "09:00 AM - 11:00 AM";
+
+    case "11:00:00":
+      return "11:00 AM - 01:00 PM";
+
+    case "14:00:00":
+      return "02:00 PM - 04:00 PM";
+
+    case "16:00:00":
+      return "04:00 PM - 06:00 PM";
+
+    default:
+      return time;
+  }
+};
 
   return (
 
@@ -199,8 +221,8 @@ const ngoId = user.ngo_id;
   </p>
 
   <p className="text-sm text-gray-500">
-    {match.pickup_time || "--"}
-  </p>
+  {formatPickupTime(match.pickup_time)}
+</p>
 
 </div>
 

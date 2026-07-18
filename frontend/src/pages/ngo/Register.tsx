@@ -40,6 +40,11 @@ export default function NGORegister() {
   const [showConfirmPassword, setShowConfirmPassword] =
     useState(false);
 
+  const [location, setLocation] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
+
   const {
     register,
     handleSubmit,
@@ -47,47 +52,113 @@ export default function NGORegister() {
     formState: { errors },
   } = useForm<NGORegisterForm>();
 
-  const onSubmit = async (
-    data: NGORegisterForm
-  ) => {
+const onSubmit = async (
+  data: NGORegisterForm
+) => {
 
-    if (
-      data.password !==
-      data.confirmPassword
-    ) {
-      toast.error("Passwords do not match");
-      return;
-    }
+  if (
+    data.password !==
+    data.confirmPassword
+  ) {
+    toast.error("Passwords do not match");
+    return;
+  }
 
-    setLoading(true);
+  setLoading(true);
 
-    try {
+  try {
 
-      await registerNGO({
-        organization_name:
-          data.organization_name,
+    if (!navigator.geolocation) {
 
-        registration_number:
-          data.registration_number,
-
-        email: data.email,
-
-        phone: data.phone,
-
-        address: data.address,
-
-        password: data.password,
-      });
-
-      toast.success(
-        "NGO Registered Successfully"
+      toast.error(
+        "Geolocation is not supported by your browser."
       );
 
-      reset();
+      setLoading(false);
 
-      navigate("/ngo/login");
+      return;
 
-    } catch (error: any) {
+    }
+console.log("Before requesting location");
+    const position =
+      await new Promise<GeolocationPosition>(
+        (resolve, reject) => {
+
+          navigator.geolocation.getCurrentPosition(
+
+            resolve,
+
+            reject,
+
+            {
+              enableHighAccuracy: true,
+              timeout: 10000,
+            }
+
+          );
+
+        }
+      );
+
+    const latitude =
+      position.coords.latitude;
+
+    const longitude =
+      position.coords.longitude;
+console.log("Latitude:", latitude);
+console.log("Longitude:", longitude);
+    setLocation({
+      latitude,
+      longitude,
+    });
+
+    await registerNGO({
+
+      organization_name:
+        data.organization_name,
+
+      registration_number:
+        data.registration_number,
+
+      email:
+        data.email,
+
+      phone:
+        data.phone,
+
+      address:
+        data.address,
+
+      password:
+        data.password,
+
+      latitude:
+        latitude,
+
+      longitude:
+        longitude,
+
+    });
+
+    toast.success(
+      "NGO Registered Successfully"
+    );
+
+    reset();
+
+    navigate("/ngo/login");
+
+  } catch (error: any) {
+
+    if (
+      error?.code === 1
+    ) {
+
+      toast.error(
+        "Please allow location access."
+      );
+
+    } else {
 
       toast.error(
         error?.response?.data?.detail ||
@@ -96,9 +167,11 @@ export default function NGORegister() {
 
     }
 
-    setLoading(false);
+  }
 
-  };
+  setLoading(false);
+
+};
 
   return (
 
