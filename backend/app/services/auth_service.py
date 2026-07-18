@@ -1,7 +1,10 @@
 from sqlalchemy.orm import Session
 
 from app.models.user import User
+from app.models.ngo_profile import NGOProfile
+
 from app.schemas.user_schema import UserRegister, UserLogin
+
 from app.core.security import hash_password, verify_password
 
 
@@ -28,6 +31,20 @@ def register_user(user: UserRegister, db: Session):
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
+
+    if user.role.lower() == "ngo":
+
+        ngo_profile = NGOProfile(
+            user_id=new_user.id,
+            organization_name=user.full_name,
+            registration_number=f"NGO-{new_user.id}",
+            description="",
+            latitude=None,
+            longitude=None,
+        )
+
+        db.add(ngo_profile)
+        db.commit()
 
     return new_user
 

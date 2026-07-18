@@ -5,6 +5,9 @@ export interface RecentDonation {
   date: string;
   status: string;
   items: number;
+
+  volunteer_name?: string | null;
+  volunteer_phone?: string | null;
 }
 
 export interface DashboardStats {

@@ -1,7 +1,7 @@
 import toast from "react-hot-toast";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { loginUser } from "../../services/authService";
 
@@ -20,6 +20,9 @@ interface LoginForm {
 
 export default function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const isNGO = location.pathname.includes("/ngo");
 
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -37,14 +40,19 @@ export default function Login() {
       const user = await loginUser(data);
 
       localStorage.setItem("user", JSON.stringify(user));
+
       toast.success(`Welcome back, ${user.full_name}!`);
 
-      navigate("/donor/dashboard");
+      if (user.role === "ngo") {
+        navigate("/ngo/dashboard");
+      } else {
+        navigate("/donor/dashboard");
+      }
     } catch (error: any) {
       toast.error(
-  error?.response?.data?.detail ||
-  "Email or password is incorrect."
-);
+        error?.response?.data?.detail ||
+          "Email or password is incorrect."
+      );
     }
 
     setLoading(false);
@@ -52,8 +60,6 @@ export default function Login() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center px-6 relative overflow-hidden">
-
-      {/* Background Blur */}
 
       <div className="absolute -top-32 -left-32 w-80 h-80 rounded-full bg-blue-300/20 blur-3xl"></div>
 
@@ -65,7 +71,6 @@ export default function Login() {
         transition={{ duration: .7 }}
         className="relative w-full max-w-md"
       >
-
         <div className="bg-white/80 backdrop-blur-xl shadow-2xl rounded-[35px] border border-white p-10">
 
           <button
@@ -73,33 +78,29 @@ export default function Login() {
             className="flex items-center gap-2 text-blue-600 hover:text-blue-700 font-semibold"
           >
             <FaArrowLeft />
-
             Back to Home
           </button>
 
           <h1 className="text-4xl font-black text-center mt-6 text-slate-900">
-            Welcome Back
+            {isNGO ? "NGO Login" : "Welcome Back"}
           </h1>
 
           <p className="text-center text-gray-500 mt-3 mb-10">
-            Login to continue using the AI Donation Management System.
+            {isNGO
+              ? "Login to manage NGO demands and matches."
+              : "Login to continue using the AI Donation Management System."}
           </p>
 
           <form
             onSubmit={handleSubmit(onSubmit)}
             className="space-y-6"
           >
-
-            {/* EMAIL */}
-
             <div>
-
               <label className="font-semibold">
                 Email Address
               </label>
 
               <div className="mt-2 flex items-center border rounded-2xl bg-white">
-
                 <FaEnvelope className="ml-4 text-gray-400" />
 
                 <input
@@ -110,33 +111,23 @@ export default function Login() {
                   className="w-full p-4 outline-none rounded-2xl"
                   placeholder="Enter your email"
                 />
-
               </div>
 
               <p className="text-red-500 text-sm mt-1">
                 {errors.email?.message}
               </p>
-
             </div>
 
-            {/* PASSWORD */}
-
             <div>
-
               <label className="font-semibold">
                 Password
               </label>
 
               <div className="mt-2 flex items-center border rounded-2xl bg-white">
-
                 <FaLock className="ml-4 text-gray-400" />
 
                 <input
-                  type={
-                    showPassword
-                      ? "text"
-                      : "password"
-                  }
+                  type={showPassword ? "text" : "password"}
                   {...register("password", {
                     required: "Password is required",
                   })}
@@ -157,13 +148,11 @@ export default function Login() {
                     <FaEye />
                   )}
                 </button>
-
               </div>
 
               <p className="text-red-500 text-sm mt-1">
                 {errors.password?.message}
               </p>
-
             </div>
 
             <button
@@ -172,26 +161,21 @@ export default function Login() {
             >
               {loading ? "Signing In..." : "Login"}
             </button>
-
           </form>
 
           <p className="text-center mt-8 text-gray-600">
-
             Don't have an account?{" "}
 
             <Link
-              to="/register"
+              to={isNGO ? "/ngo/register" : "/register"}
               className="text-blue-600 font-bold hover:underline"
             >
               Create Account
             </Link>
-
           </p>
 
         </div>
-
       </motion.div>
-
     </div>
   );
 }

@@ -9,12 +9,20 @@ import {
   Clock3,
   ArrowRight,
   LogOut,
+  Handshake,
 } from "lucide-react";
 
 import { getDashboardStats } from "../../services/dashboardService";
+import {
+  getDonorNotifications,
+  markDonorNotificationRead,
+} from "../../services/donorNotificationService";
+
+import { Bell } from "lucide-react";
 import type { DashboardStats } from "../../services/dashboardService";
 
 export default function Dashboard() {
+
   const navigate = useNavigate();
 
   const user = JSON.parse(
@@ -24,63 +32,130 @@ export default function Dashboard() {
   const [stats, setStats] =
     useState<DashboardStats | null>(null);
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] =
+    useState(true);
+    const [notifications, setNotifications] =
+  useState<any[]>([]);
 
   useEffect(() => {
+
     if (!user.id) {
+
       navigate("/login");
+
       return;
+
     }
 
     const fetchDashboard = async () => {
+
       try {
+
         const data =
           await getDashboardStats(user.id);
 
         setStats(data);
+        const notificationData =
+  await getDonorNotifications(user.id);
+
+setNotifications(notificationData);
+
       } catch (err) {
+
         console.error(err);
+
       }
 
       setLoading(false);
+
     };
 
     fetchDashboard();
+
   }, []);
+
   useEffect(() => {
 
-  window.history.pushState(null, "", window.location.href);
-
-  const handlePopState = () => {
     window.history.pushState(
       null,
       "",
       window.location.href
     );
-  };
 
-  window.addEventListener("popstate", handlePopState);
+    const handlePopState = () => {
 
-  return () => {
-    window.removeEventListener(
+      window.history.pushState(
+        null,
+        "",
+        window.location.href
+      );
+
+    };
+
+    window.addEventListener(
       "popstate",
       handlePopState
     );
-  };
 
-}, []);
+    return () => {
 
- const logout = () => {
+      window.removeEventListener(
+        "popstate",
+        handlePopState
+      );
 
-  localStorage.clear();
+    };
 
-  navigate("/", {
-    replace: true,
-  });
+  }, []);
+const openNotification = async (
+  notification: any
+) => {
+
+  try {
+
+    if (
+      notification.title ===
+      "Donation Accepted"
+    ) {
+
+      navigate(
+        `/donor/checklist/${notification.match_id}`
+      );
+
+      return;
+    }
+
+    await markDonorNotificationRead(
+      notification.id
+    );
+
+    setNotifications((prev) =>
+      prev.filter(
+        (n) => n.id !== notification.id
+      )
+    );
+
+  } catch (error) {
+
+    console.error(error);
+
+  }
+
+};
+  const logout = () => {
+
+    localStorage.clear();
+
+    navigate("/", {
+      replace: true,
+    });
+
   };
 
   if (loading) {
+
     return (
+
       <div className="min-h-screen flex justify-center items-center bg-gradient-to-br from-slate-100 via-blue-50 to-indigo-100">
 
         <div className="text-center">
@@ -96,15 +171,16 @@ export default function Dashboard() {
         </div>
 
       </div>
+
     );
+
   }
 
   return (
+
     <div className="min-h-screen bg-gradient-to-br from-slate-100 via-blue-50 to-indigo-100">
 
       <div className="max-w-7xl mx-auto py-10 px-6">
-
-        {/* Header */}
 
         <motion.div
           initial={{
@@ -152,8 +228,56 @@ export default function Dashboard() {
           </button>
 
         </motion.div>
+{notifications
+  .filter((n) => !n.is_read)
+  .map((notification) => (
 
-        {/* Camera Card */}
+    <motion.div
+      key={notification.id}
+      whileHover={{ scale: 1.01 }}
+      onClick={() =>
+        openNotification(notification)
+      }
+      className="cursor-pointer mt-8 bg-yellow-100 border-l-8 border-yellow-500 rounded-3xl p-6 shadow-lg"
+    >
+
+      <div className="flex items-center gap-4">
+
+        <Bell
+          size={40}
+          className="text-yellow-700"
+        />
+
+        <div>
+
+          <h2 className="text-2xl font-bold">
+
+            {notification.title}
+
+          </h2>
+
+          <p className="text-gray-700 mt-1">
+
+            {notification.message}
+
+          </p>
+
+          <p className="text-blue-600 font-semibold mt-3">
+
+  {notification.title === "Donation Accepted"
+    ? "Click to continue →"
+    : "Mark as Read"}
+
+</p>
+
+        </div>
+
+      </div>
+
+    </motion.div>
+
+))}
+        {/* Camera */}
 
         <motion.div
           whileHover={{
@@ -177,8 +301,7 @@ export default function Dashboard() {
 
               <p className="mt-4 text-blue-100 text-lg">
 
-                Open the AI Camera and detect
-                donation items instantly.
+                Open the AI Camera and detect donation items instantly.
 
               </p>
 
@@ -190,10 +313,46 @@ export default function Dashboard() {
 
         </motion.div>
 
-        {/* Statistics */}
+        {/* AI Matching */}
+
+        <motion.div
+          whileHover={{
+            scale: 1.02,
+          }}
+          onClick={() =>
+            navigate("/donor/matches")
+          }
+          className="cursor-pointer mt-8 rounded-3xl bg-gradient-to-r from-green-600 to-emerald-500 text-white shadow-2xl p-10"
+        >
+
+          <div className="flex justify-between items-center">
+
+            <div>
+
+              <h2 className="text-4xl font-black">
+
+                AI Matching Results
+
+              </h2>
+
+              <p className="mt-4 text-green-100 text-lg">
+
+                View NGOs matched by the Intelligent Matching Engine.
+
+              </p>
+
+            </div>
+
+            <Handshake size={65} />
+
+          </div>
+
+        </motion.div>
+                {/* Statistics */}
 
         <div className="grid lg:grid-cols-2 gap-8 mt-10">
-                    {/* Total Donations */}
+
+          {/* Total Donations */}
 
           <motion.div
             whileHover={{ y: -6 }}
@@ -370,8 +529,7 @@ export default function Dashboard() {
           </motion.div>
 
         </div>
-
-        {/* Recent Donations */}
+                {/* Recent Donations */}
 
         <motion.div
           initial={{
@@ -394,18 +552,39 @@ export default function Dashboard() {
 
             </h2>
 
-            <button
-  onClick={() => navigate("/donor/history")}
-  className="flex items-center gap-2 text-blue-600 font-semibold"
->
-  View All
-  <ArrowRight size={18} />
-</button>
+            <div className="flex gap-4">
+
+              <button
+                onClick={() =>
+                  navigate("/donor/matches")
+                }
+                className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-2xl font-semibold transition"
+              >
+
+                Matching Results
+
+              </button>
+
+              <button
+                onClick={() =>
+                  navigate("/donor/history")
+                }
+                className="flex items-center gap-2 text-blue-600 font-semibold"
+              >
+
+                View All
+
+                <ArrowRight size={18} />
+
+              </button>
+
+            </div>
 
           </div>
 
           <div className="mt-8 space-y-5">
-                        {stats?.recent_donations &&
+
+            {stats?.recent_donations &&
             stats.recent_donations.length > 0 ? (
 
               stats.recent_donations.map((donation) => (
@@ -434,19 +613,38 @@ export default function Dashboard() {
 
                   </div>
 
-                  <div>
+                  <div className="text-center">
 
-                    <span
-                      className={`px-4 py-2 rounded-full text-sm font-semibold ${
-                        donation.status === "Pending"
-                          ? "bg-orange-100 text-orange-600"
-                          : "bg-green-100 text-green-600"
-                      }`}
-                    >
-                      {donation.status}
-                    </span>
+  <span
+    className={`px-4 py-2 rounded-full text-sm font-semibold ${
+      donation.status === "Pending"
+        ? "bg-orange-100 text-orange-600"
+        : "bg-green-100 text-green-600"
+    }`}
+  >
+    {donation.status}
+  </span>
 
-                  </div>
+  {donation.status === "Out For Pickup" &&
+    donation.volunteer_name && (
+      <div className="mt-3 text-sm text-gray-700">
+        <p>
+          <span className="font-semibold">
+            Volunteer:
+          </span>{" "}
+          {donation.volunteer_name}
+        </p>
+
+        <p>
+          <span className="font-semibold">
+            Phone:
+          </span>{" "}
+          {donation.volunteer_phone}
+        </p>
+      </div>
+  )}
+
+</div>
 
                   <div className="text-right">
 
@@ -489,14 +687,31 @@ export default function Dashboard() {
 
                 </p>
 
-                <button
-                  onClick={() =>
-                    navigate("/donor/camera")
-                  }
-                  className="mt-8 bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-2xl font-bold transition"
-                >
-                  Start Donation
-                </button>
+                <div className="flex justify-center gap-5 mt-8">
+
+                  <button
+                    onClick={() =>
+                      navigate("/donor/camera")
+                    }
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-2xl font-bold transition"
+                  >
+
+                    Start Donation
+
+                  </button>
+
+                  <button
+                    onClick={() =>
+                      navigate("/donor/matches")
+                    }
+                    className="bg-green-600 hover:bg-green-700 text-white px-8 py-4 rounded-2xl font-bold transition"
+                  >
+
+                    View Matches
+
+                  </button>
+
+                </div>
 
               </div>
 
@@ -505,9 +720,10 @@ export default function Dashboard() {
           </div>
 
         </motion.div>
-
-      </div>
+              </div>
 
     </div>
+
   );
+
 }

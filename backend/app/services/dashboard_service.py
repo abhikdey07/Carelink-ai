@@ -3,6 +3,8 @@ from sqlalchemy import func
 
 from app.models.donation import Donation
 from app.models.donation_item import DonationItem
+from app.models.pickup_schedule import PickupSchedule
+from app.models.match import Match
 
 
 def get_dashboard_stats(user_id: int, db: Session):
@@ -72,28 +74,46 @@ def get_dashboard_stats(user_id: int, db: Session):
             .scalar()
         )
 
+        pickup = (
+            db.query(PickupSchedule)
+            .join(
+                Match,
+                Match.id == PickupSchedule.match_id
+            )
+            .filter(
+                Match.donation_id == donation.id
+            )
+            .first()
+        )
+
         recent_data.append(
             {
                 "id": donation.id,
                 "date": donation.donated_at.strftime("%d %b %Y"),
                 "status": donation.status,
                 "items": total,
+                "volunteer_name": (
+                    pickup.volunteer_name
+                    if pickup and donation.status == "Out For Pickup"
+                    else None
+                ),
+                "volunteer_phone": (
+                    pickup.volunteer_phone
+                    if pickup and donation.status == "Out For Pickup"
+                    else None
+                ),
             }
         )
 
     return {
-
         "total_donations": total_donations,
-
         "total_items": total_items,
-
         "pending_donations": pending_donations,
-
         "last_donation": last_donation,
-
         "recent_donations": recent_data,
-
     }
+
+
 def get_all_donations(user_id: int, db: Session):
 
     donations = (
@@ -120,12 +140,34 @@ def get_all_donations(user_id: int, db: Session):
             .scalar()
         )
 
+        pickup = (
+            db.query(PickupSchedule)
+            .join(
+                Match,
+                Match.id == PickupSchedule.match_id
+            )
+            .filter(
+                Match.donation_id == donation.id
+            )
+            .first()
+        )
+
         history.append(
             {
                 "id": donation.id,
                 "date": donation.donated_at.strftime("%d %b %Y"),
                 "status": donation.status,
                 "items": total,
+                "volunteer_name": (
+                    pickup.volunteer_name
+                    if pickup and donation.status == "Out For Pickup"
+                    else None
+                ),
+                "volunteer_phone": (
+                    pickup.volunteer_phone
+                    if pickup and donation.status == "Out For Pickup"
+                    else None
+                ),
             }
         )
 

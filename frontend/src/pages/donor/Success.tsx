@@ -83,25 +83,32 @@ export default function Success() {
           </div>
 
         </div>
-                <div className="grid md:grid-cols-2 gap-5 mt-10">
+                <div className="grid md:grid-cols-3 gap-5 mt-10">
 
-          <button
-            onClick={() => navigate("/donor/dashboard")}
-            className="flex items-center justify-center gap-3 bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl text-lg font-bold transition"
-          >
-            <Home size={22} />
-            Go to Dashboard
-          </button>
+  <button
+    onClick={() => navigate("/donor/dashboard")}
+    className="flex items-center justify-center gap-3 bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl text-lg font-bold transition"
+  >
+    <Home size={22} />
+    Dashboard
+  </button>
 
-          <button
-            onClick={() => navigate("/donor/camera")}
-            className="flex items-center justify-center gap-3 bg-green-600 hover:bg-green-700 text-white py-4 rounded-2xl text-lg font-bold transition"
-          >
-            <Camera size={22} />
-            Donate Again
-          </button>
+  <button
+    onClick={() => navigate("/donor/matches")}
+    className="flex items-center justify-center gap-3 bg-purple-600 hover:bg-purple-700 text-white py-4 rounded-2xl text-lg font-bold transition"
+  >
+    View AI Matches
+  </button>
 
-        </div>
+  <button
+    onClick={() => navigate("/donor/camera")}
+    className="flex items-center justify-center gap-3 bg-green-600 hover:bg-green-700 text-white py-4 rounded-2xl text-lg font-bold transition"
+  >
+    <Camera size={22} />
+    Donate Again
+  </button>
+
+</div>
 
         <p className="text-gray-400 text-sm mt-10">
           AI Donation Management System © 2026

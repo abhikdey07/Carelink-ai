@@ -4,163 +4,138 @@ import {
   Camera,
   HeartHandshake,
   Truck,
-  Users,
-  Building2,
-  PackageCheck,
-  ShieldCheck,
 } from "lucide-react";
-
-const stats = [
-  {
-    value: "500+",
-    label: "Donations",
-    icon: PackageCheck,
-    color: "text-blue-600",
-    bg: "bg-blue-100",
-  },
-  {
-    value: "150+",
-    label: "Donors",
-    icon: Users,
-    color: "text-green-600",
-    bg: "bg-green-100",
-  },
-  {
-    value: "25+",
-    label: "NGOs",
-    icon: Building2,
-    color: "text-purple-600",
-    bg: "bg-purple-100",
-  },
-  {
-    value: "AI",
-    label: "Powered",
-    icon: ShieldCheck,
-    color: "text-orange-600",
-    bg: "bg-orange-100",
-  },
-];
 
 const features = [
   {
     title: "AI Item Detection",
     description:
-      "Automatically detects donation items using Artificial Intelligence.",
+      "Automatically identifies donated items using Artificial Intelligence for faster and more accurate cataloging.",
     icon: BrainCircuit,
-    color: "bg-blue-100 text-blue-600",
+    color: "from-blue-500 to-cyan-500",
   },
   {
     title: "Camera Capture",
     description:
-      "Capture donation items directly from your mobile or desktop camera.",
+      "Capture donation items directly from your mobile or desktop camera with a seamless experience.",
     icon: Camera,
-    color: "bg-green-100 text-green-600",
+    color: "from-emerald-500 to-green-500",
   },
   {
     title: "Smart NGO Matching",
     description:
-      "AI helps connect donors with NGOs that actually need those items.",
+      "Matches donations with NGOs based on real requirements to reduce waste and improve distribution.",
     icon: HeartHandshake,
-    color: "bg-pink-100 text-pink-600",
+    color: "from-pink-500 to-rose-500",
   },
   {
     title: "Pickup Tracking",
     description:
-      "Track donation pickup and delivery from a single dashboard.",
+      "Track every donation from scheduling to successful delivery with complete transparency.",
     icon: Truck,
-    color: "bg-orange-100 text-orange-600",
+    color: "from-orange-500 to-amber-500",
   },
 ];
 
 export default function Features() {
   return (
-    <section className="max-w-7xl mx-auto px-6 py-20">
+    <section className="py-20">
 
       <motion.div
-        initial={{ opacity: 0, y: 60 }}
+        initial={{ opacity: 0, y: 40 }}
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ duration: .7 }}
         viewport={{ once: true }}
+        className="mx-auto max-w-3xl text-center"
       >
 
-        <h2 className="text-5xl font-black text-center text-slate-900">
-          Platform Highlights
+        <span className="rounded-full bg-blue-100 px-5 py-2 text-sm font-semibold text-blue-700">
+
+          Platform Features
+
+        </span>
+
+        <h2 className="mt-6 text-4xl font-black text-slate-900 lg:text-5xl">
+
+          Everything You Need
+          <br />
+          In One Intelligent Platform
+
         </h2>
 
-        <p className="text-center text-gray-500 mt-5 text-lg max-w-3xl mx-auto">
-          Our platform combines Artificial Intelligence with a modern donation
-          workflow to simplify the donation process for donors and NGOs.
+        <p className="mt-6 text-lg leading-8 text-slate-600">
+
+          CareLink AI simplifies the donation journey through
+          Artificial Intelligence, helping donors, NGOs and
+          volunteers collaborate efficiently from donation to
+          successful delivery.
+
         </p>
 
       </motion.div>
 
-      {/* Statistics */}
+      <div className="mt-16 grid gap-8 md:grid-cols-2">
 
-      <div className="grid md:grid-cols-4 gap-6 mt-16">
-
-        {stats.map((stat, index) => (
+              {features.map((feature, index) => (
           <motion.div
-            key={index}
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * .15 }}
-            viewport={{ once: true }}
-            whileHover={{
-              scale: 1.05,
-              y: -6,
+            key={feature.title}
+            initial={{
+              opacity: 0,
+              y: 40,
             }}
-            className="bg-white rounded-3xl shadow-xl p-8 text-center"
+            whileInView={{
+              opacity: 1,
+              y: 0,
+            }}
+            transition={{
+              delay: index * 0.15,
+              duration: 0.6,
+            }}
+            viewport={{
+              once: true,
+            }}
+            whileHover={{
+              y: -8,
+            }}
+            className="group rounded-3xl border border-slate-200 bg-white p-8 shadow-sm transition-all hover:border-blue-200 hover:shadow-2xl"
           >
 
             <div
-              className={`w-16 h-16 mx-auto rounded-2xl flex items-center justify-center ${stat.bg}`}
+              className={`inline-flex rounded-2xl bg-gradient-to-r ${feature.color} p-4 text-white shadow-lg`}
             >
-              <stat.icon className={stat.color} size={32} />
-            </div>
 
-            <h3 className="text-4xl font-black mt-6 text-slate-900">
-              {stat.value}
-            </h3>
-
-            <p className="text-gray-500 mt-2">
-              {stat.label}
-            </p>
-
-          </motion.div>
-        ))}
-
-      </div>
-
-      {/* Features */}
-
-      <div className="grid lg:grid-cols-2 gap-8 mt-20">
-
-        {features.map((feature, index) => (
-          <motion.div
-            key={index}
-            initial={{ opacity: 0, x: index % 2 === 0 ? -40 : 40 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            transition={{ duration: .6 }}
-            viewport={{ once: true }}
-            whileHover={{
-              scale: 1.02,
-            }}
-            className="bg-white rounded-3xl shadow-xl p-8"
-          >
-
-            <div
-              className={`w-16 h-16 rounded-2xl flex items-center justify-center ${feature.color}`}
-            >
               <feature.icon size={30} />
+
             </div>
 
-            <h3 className="text-2xl font-bold mt-6">
+            <h3 className="mt-6 text-2xl font-bold text-slate-900">
+
               {feature.title}
+
             </h3>
 
-            <p className="text-gray-500 mt-4 leading-8">
+            <p className="mt-4 leading-8 text-slate-600">
+
               {feature.description}
+
             </p>
+
+            <motion.div
+              initial={{
+                width: 0,
+              }}
+              whileInView={{
+                width: "100%",
+              }}
+              transition={{
+                delay: index * 0.2,
+                duration: 0.7,
+              }}
+              viewport={{
+                once: true,
+              }}
+              className={`mt-8 h-1 rounded-full bg-gradient-to-r ${feature.color}`}
+            />
 
           </motion.div>
         ))}

@@ -1,7 +1,7 @@
 import toast from "react-hot-toast";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { registerUser } from "../../services/authService";
 
@@ -27,6 +27,11 @@ interface RegisterForm {
 
 export default function Register() {
   const navigate = useNavigate();
+  const location = useLocation();
+
+const isNGO = location.pathname.includes("/ngo");
+console.log("PATH =", location.pathname);
+console.log("isNGO =", isNGO);
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] =
@@ -56,14 +61,18 @@ export default function Register() {
         password: data.password,
         phone: data.phone,
         address: data.address,
-        role: "donor",
+        role: isNGO ? "ngo" : "donor",
       });
 
-     toast.success("Account created successfully!");
+     toast.success(
+  isNGO
+    ? "NGO Account created successfully!"
+    : "Account created successfully!"
+);
 
-      reset();
+reset();
 
-      navigate("/login");
+navigate(isNGO ? "/ngo/login" : "/login");
     } catch (error: any) {
      toast.error(
   error?.response?.data?.detail ||
@@ -100,11 +109,13 @@ export default function Register() {
           </button>
 
           <h1 className="text-4xl font-black text-center mt-6">
-            Create Account
+            {isNGO ? "NGO Registration" : "Create Account"}
           </h1>
 
           <p className="text-center text-gray-500 mt-3 mb-10">
-            Join the AI Donation Management System
+            {isNGO
+  ? "Register your NGO to receive donations"
+  : "Join the AI Donation Management System"}
           </p>
 
           <form

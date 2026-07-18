@@ -8,9 +8,13 @@ interface Donation {
   date: string;
   status: string;
   items: number;
+
+  volunteer_name?: string | null;
+  volunteer_phone?: string | null;
 }
 
 export default function History() {
+
   const navigate = useNavigate();
 
   const [history, setHistory] = useState<Donation[]>([]);
@@ -21,7 +25,9 @@ export default function History() {
   }, []);
 
   const loadHistory = async () => {
+
     try {
+
       const user = JSON.parse(
         localStorage.getItem("user") || "{}"
       );
@@ -31,14 +37,30 @@ export default function History() {
       );
 
       setHistory(response.data);
+
     } catch (error) {
+
       console.error(error);
+
     }
 
     setLoading(false);
+
+  };
+
+  const viewMatches = (donationId: number) => {
+
+    localStorage.setItem(
+      "lastDonationId",
+      donationId.toString()
+    );
+
+    navigate("/donor/matches");
+
   };
 
   return (
+
     <div className="min-h-screen bg-gradient-to-br from-slate-100 via-blue-50 to-indigo-100">
 
       <div className="max-w-6xl mx-auto py-10 px-6">
@@ -56,58 +78,122 @@ export default function History() {
         </h1>
 
         {loading ? (
-          <h2 className="text-xl">Loading...</h2>
+
+          <h2 className="text-xl">
+            Loading...
+          </h2>
+
         ) : history.length === 0 ? (
+
           <div className="bg-white rounded-3xl p-10 shadow-xl text-center">
+
             <h2 className="text-2xl font-bold">
               No Donations Found
             </h2>
+
           </div>
+
         ) : (
+
           <div className="space-y-6">
+
             {history.map((donation) => (
+
               <div
                 key={donation.id}
                 className="bg-white rounded-3xl shadow-xl p-6 flex justify-between items-center"
               >
+
                 <div className="flex gap-5 items-center">
+
                   <div className="bg-blue-100 p-4 rounded-2xl">
+
                     <Package
                       className="text-blue-600"
                       size={28}
                     />
+
                   </div>
 
                   <div>
+
                     <h2 className="text-2xl font-bold">
+
                       Donation #{donation.id}
+
                     </h2>
 
                     <p className="text-gray-500">
+
                       {donation.date}
+
                     </p>
 
                     <p className="mt-2">
-                      Items Donated:{" "}
-                      <b>{donation.items}</b>
+
+                      Items Donated :
+                      <b> {donation.items}</b>
+
                     </p>
+
                   </div>
+
                 </div>
 
-                <div
-                  className={`px-5 py-2 rounded-full font-bold ${
-                    donation.status === "Pending"
-                      ? "bg-yellow-100 text-yellow-700"
-                      : "bg-green-100 text-green-700"
-                  }`}
-                >
-                  {donation.status}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+               <div className="flex items-center gap-4">
+
+  <div className="text-center">
+
+    <div
+      className={`px-5 py-2 rounded-full font-bold ${
+        donation.status === "Pending"
+          ? "bg-yellow-100 text-yellow-700"
+          : "bg-green-100 text-green-700"
+      }`}
+    >
+      {donation.status}
     </div>
+
+    {donation.status === "Out For Pickup" &&
+      donation.volunteer_name && (
+        <div className="mt-3 text-sm text-gray-700">
+          <p>
+            <strong>Volunteer:</strong>{" "}
+            {donation.volunteer_name}
+          </p>
+
+          <p>
+            <strong>Phone:</strong>{" "}
+            {donation.volunteer_phone}
+          </p>
+        </div>
+    )}
+
+  </div>
+
+  <button
+    onClick={() =>
+      viewMatches(donation.id)
+    }
+    className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-xl font-semibold"
+  >
+    View Matches
+  </button>
+
+</div>
+
+              </div>
+
+            ))}
+
+          </div>
+
+        )}
+
+      </div>
+
+    </div>
+
   );
+
 }

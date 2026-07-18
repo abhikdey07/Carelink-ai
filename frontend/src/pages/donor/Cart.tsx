@@ -19,65 +19,150 @@ interface DetectionItem {
   item: string;
   quantity: number;
   confidence: number;
+  condition: string;
 }
 
 export default function Cart() {
+
   const navigate = useNavigate();
 
-  const [items, setItems] = useState<DetectionItem[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [items, setItems] =
+    useState<DetectionItem[]>([]);
+
+  const [loading, setLoading] =
+    useState(false);
 
   useEffect(() => {
-    const stored = localStorage.getItem("detections");
+
+    const stored =
+      localStorage.getItem("detections");
 
     if (!stored) return;
 
     const response = JSON.parse(stored);
 
-    setItems(response.detections);
+    setItems(
+
+      response.detections.map(
+        (item: any) => ({
+
+          item: item.item,
+
+          quantity: item.quantity,
+
+          confidence: item.confidence,
+
+          condition: "Good",
+
+        })
+      )
+
+    );
+
   }, []);
 
-  const increase = (index: number) => {
+  const increase = (
+    index: number
+  ) => {
+
     const updated = [...items];
+
     updated[index].quantity++;
+
     setItems(updated);
+
   };
 
-  const decrease = (index: number) => {
+  const decrease = (
+    index: number
+  ) => {
+
     const updated = [...items];
 
-    if (updated[index].quantity > 1) {
+    if (
+      updated[index].quantity > 1
+    ) {
+
       updated[index].quantity--;
+
     }
 
     setItems(updated);
+
   };
 
-  const removeItem = (index: number) => {
-    setItems(items.filter((_, i) => i !== index));
+  const removeItem = (
+    index: number
+  ) => {
+
+    setItems(
+
+      items.filter(
+        (_, i) => i !== index
+      )
+
+    );
+
   };
 
   const addItem = () => {
+
     setItems([
+
       ...items,
+
       {
+
         item: "",
+
         quantity: 1,
+
         confidence: 100,
+
+        condition: "Good",
+
       },
+
     ]);
+
   };
 
   const updateName = (
+
     index: number,
+
     value: string
+
   ) => {
+
     const updated = [...items];
+
     updated[index].item = value;
+
     setItems(updated);
+
   };
 
-  const confidenceColor = (confidence: number) => {
+  const updateCondition = (
+
+    index: number,
+
+    value: string
+
+  ) => {
+
+    const updated = [...items];
+
+    updated[index].condition = value;
+
+    setItems(updated);
+
+  };
+
+  const confidenceColor = (
+    confidence: number
+  ) => {
+
     if (confidence >= 90)
       return "bg-green-100 text-green-700";
 
@@ -85,96 +170,210 @@ export default function Cart() {
       return "bg-yellow-100 text-yellow-700";
 
     return "bg-red-100 text-red-700";
-  };
 
-  const handleSubmit = async () => {
+  };
+    const handleSubmit = async () => {
+
     if (items.length === 0) {
-      toast.error("No donation items found.");
+
+      toast.error(
+        "No donation items found."
+      );
+
       return;
+
     }
 
     const user = JSON.parse(
+
       localStorage.getItem("user") || "{}"
+
     );
 
     if (!user.id) {
-      toast.error("Session expired. Please login again.");
+
+      toast.error(
+        "Session expired. Please login again."
+      );
+
       navigate("/login");
+
       return;
+
     }
 
+    if (!navigator.geolocation) {
+
+      toast.error(
+        "Geolocation is not supported by this browser."
+      );
+
+      return;
+
+    }
+
+    setLoading(true);
+
     const loadingToast = toast.loading(
-  "Submitting your donation..."
-);
+      "Getting your location..."
+    );
 
-setLoading(true);
+    navigator.geolocation.getCurrentPosition(
 
-    try {
-      const payload = {
-        donor_id: user.id,
+      async (position) => {
 
-        items: items.map(
-          (item): DonationItem => ({
-            item_name: item.item,
-            quantity: item.quantity,
-            confidence: item.confidence,
-          })
-        ),
-      };
+        try {
 
-      const response = await submitDonation(payload);
-      console.log(JSON.stringify(response, null, 2));
+          const payload = {
 
-localStorage.setItem(
-  "lastDonationId",
-  response.id.toString()
-);
-      toast.dismiss(loadingToast);
+            donor_id: user.id,
 
+            latitude:
+              position.coords.latitude,
 
+            longitude:
+              position.coords.longitude,
 
-      localStorage.removeItem("detections");
+            items: items.map(
 
-      toast.success("Donation submitted successfully!");
+              (item): DonationItem => ({
 
-      setTimeout(() => {
+                item_name: item.item,
 
-  navigate("/donor/success");
+                quantity: item.quantity,
 
-}, 1200);
-    } catch (error) {
+                confidence:
+                  item.confidence,
 
-  console.error(error);
+                condition:
+                  item.condition,
 
-  toast.dismiss(loadingToast);
+              })
 
-  toast.error(
-    "Failed to submit donation."
-  );
+            ),
 
-}
+          };
 
-    setLoading(false);
+          toast.loading(
+
+            "Submitting Donation...",
+
+            {
+
+              id: loadingToast,
+
+            }
+
+          );
+
+          const response =
+            await submitDonation(
+              payload
+            );
+
+          localStorage.setItem(
+
+            "lastDonationId",
+
+            response.id.toString()
+
+          );
+
+          localStorage.removeItem(
+            "detections"
+          );
+
+          toast.success(
+
+            "Donation submitted successfully!",
+
+            {
+
+              id: loadingToast,
+
+            }
+
+          );
+
+          setTimeout(() => {
+
+            navigate(
+              "/donor/success"
+            );
+
+          }, 1000);
+
+        }
+
+        catch (error) {
+
+          console.error(error);
+
+          toast.error(
+
+            "Failed to submit donation.",
+
+            {
+
+              id: loadingToast,
+
+            }
+
+          );
+
+        }
+
+        setLoading(false);
+
+      },
+
+      () => {
+
+        toast.error(
+
+          "Please allow location access to continue.",
+
+          {
+
+            id: loadingToast,
+
+          }
+
+        );
+
+        setLoading(false);
+
+      }
+
+    );
+
   };
 
   return (
+
     <div className="min-h-screen bg-gradient-to-br from-slate-100 via-blue-50 to-indigo-100">
 
       <div className="max-w-7xl mx-auto py-10 px-6">
 
-        {/* Header */}
-
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex justify-between items-center mb-10"
-        >
 
-          <div>
+          initial={{ opacity: 0, y: -20 }}
+
+          animate={{ opacity: 1, y: 0 }}
+
+          className="flex justify-between items-center mb-10"
+
+        >
+                    <div>
 
             <button
-              onClick={() => navigate("/donor/camera")}
+
+              onClick={() =>
+                navigate("/donor/camera")
+              }
+
               className="flex items-center gap-2 text-blue-600 font-semibold hover:text-blue-700"
+
             >
 
               <ArrowLeft size={18} />
@@ -191,8 +390,7 @@ localStorage.setItem(
 
             <p className="text-gray-500 mt-3">
 
-              Review AI detected items before submitting
-              your donation.
+              Review AI detected items before submitting your donation.
 
             </p>
 
@@ -201,8 +399,11 @@ localStorage.setItem(
           <div className="hidden lg:flex bg-white rounded-3xl shadow-xl p-6 items-center gap-4">
 
             <ShoppingBag
+
               className="text-blue-600"
+
               size={35}
+
             />
 
             <div>
@@ -227,59 +428,147 @@ localStorage.setItem(
 
         <div className="grid lg:grid-cols-3 gap-8">
 
-          {/* LEFT */}
-
           <div className="lg:col-span-2 space-y-6">
-                        {items.map((item, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                whileHover={{ y: -4 }}
-                className="bg-white rounded-3xl shadow-xl p-6"
-              >
 
-                <div className="flex justify-between items-center">
+            {items.map(
 
-                  <div className="flex items-center gap-4">
+              (item, index) => (
 
-                    <div className="bg-blue-100 p-4 rounded-2xl">
+                <motion.div
 
-                      <Package
-                        className="text-blue-600"
-                        size={28}
-                      />
+                  key={index}
 
-                    </div>
+                  initial={{
+                    opacity: 0,
+                    y: 20,
+                  }}
 
-                    <div>
+                  animate={{
+                    opacity: 1,
+                    y: 0,
+                  }}
 
-                      <input
-                        value={item.item}
-                        onChange={(e) =>
-                          updateName(index, e.target.value)
-                        }
-                        placeholder="Item Name"
-                        className="text-xl font-bold outline-none"
-                      />
+                  whileHover={{
+                    y: -4,
+                  }}
 
-                      <div
-                        className={`inline-block mt-2 px-3 py-1 rounded-full text-sm font-semibold ${confidenceColor(
-                          item.confidence
-                        )}`}
-                      >
-                        AI Confidence : {item.confidence}%
+                  className="bg-white rounded-3xl shadow-xl p-6"
+
+                >
+
+                  <div className="flex justify-between items-center">
+
+                    <div className="flex items-center gap-4">
+
+                      <div className="bg-blue-100 p-4 rounded-2xl">
+
+                        <Package
+
+                          className="text-blue-600"
+
+                          size={28}
+
+                        />
+
+                      </div>
+
+                      <div>
+
+                        <input
+
+                          value={item.item}
+
+                          onChange={(e) =>
+
+                            updateName(
+
+                              index,
+
+                              e.target.value
+
+                            )
+
+                          }
+
+                          placeholder="Item Name"
+
+                          className="text-xl font-bold outline-none"
+
+                        />
+
+                        <div
+
+                          className={`inline-block mt-2 px-3 py-1 rounded-full text-sm font-semibold ${confidenceColor(
+
+                            item.confidence
+
+                          )}`}
+
+                        >
+
+                          AI Confidence : {item.confidence}%
+
+                        </div>
+
+                        <div className="mt-4">
+
+                          <label className="block text-sm font-semibold mb-2">
+
+                            Condition
+
+                          </label>
+
+                          <select
+
+                            value={item.condition}
+
+                            onChange={(e) =>
+
+                              updateCondition(
+
+                                index,
+
+                                e.target.value
+
+                              )
+
+                            }
+
+                            className="border rounded-xl px-3 py-2 w-52"
+
+                          >
+
+                            <option>New</option>
+
+                            <option>Excellent</option>
+
+                            <option>Good</option>
+
+                            <option>Fair</option>
+
+                            <option>Poor</option>
+
+                            <option>Damaged</option>
+
+                          </select>
+
+                        </div>
+
                       </div>
 
                     </div>
+                                      <button
 
-                  </div>
+                    onClick={() =>
+                      removeItem(index)
+                    }
 
-                  <button
-                    onClick={() => removeItem(index)}
                     className="bg-red-100 hover:bg-red-200 text-red-600 p-3 rounded-xl transition"
+
                   >
+
                     <Trash2 size={20} />
+
                   </button>
 
                 </div>
@@ -287,42 +576,69 @@ localStorage.setItem(
                 <div className="flex items-center gap-4 mt-8">
 
                   <button
-                    onClick={() => decrease(index)}
+
+                    onClick={() =>
+                      decrease(index)
+                    }
+
                     className="bg-gray-200 hover:bg-gray-300 w-12 h-12 rounded-xl flex items-center justify-center"
+
                   >
+
                     <Minus size={18} />
+
                   </button>
 
                   <div className="text-2xl font-black w-10 text-center">
+
                     {item.quantity}
+
                   </div>
 
                   <button
-                    onClick={() => increase(index)}
+
+                    onClick={() =>
+                      increase(index)
+                    }
+
                     className="bg-blue-600 hover:bg-blue-700 text-white w-12 h-12 rounded-xl flex items-center justify-center"
+
                   >
+
                     <Plus size={18} />
+
                   </button>
 
                 </div>
 
               </motion.div>
+
             ))}
 
           </div>
 
-          {/* RIGHT */}
-
           <div>
 
             <motion.div
-              initial={{ opacity: 0, x: 40 }}
-              animate={{ opacity: 1, x: 0 }}
+
+              initial={{
+                opacity: 0,
+                x: 40,
+              }}
+
+              animate={{
+                opacity: 1,
+                x: 0,
+              }}
+
               className="bg-white rounded-3xl shadow-xl p-8 sticky top-8"
+
             >
 
               <h2 className="text-3xl font-black">
+
                 Donation Summary
+
               </h2>
 
               <div className="space-y-5 mt-8">
@@ -330,11 +646,15 @@ localStorage.setItem(
                 <div className="flex justify-between">
 
                   <span className="text-gray-500">
+
                     Total Items
+
                   </span>
 
                   <span className="font-bold">
+
                     {items.length}
+
                   </span>
 
                 </div>
@@ -342,11 +662,15 @@ localStorage.setItem(
                 <div className="flex justify-between">
 
                   <span className="text-gray-500">
+
                     AI Detection
+
                   </span>
 
                   <span className="text-green-600 font-bold">
+
                     Successful
+
                   </span>
 
                 </div>
@@ -354,20 +678,26 @@ localStorage.setItem(
                 <div className="flex justify-between">
 
                   <span className="text-gray-500">
+
                     Pickup Status
+
                   </span>
 
                   <span className="text-orange-500 font-bold">
+
                     Pending
+
                   </span>
 
                 </div>
 
               </div>
+                            <button
 
-              <button
                 onClick={addItem}
+
                 className="w-full mt-10 bg-green-600 hover:bg-green-700 text-white py-4 rounded-2xl font-bold flex justify-center items-center gap-3 transition"
+
               >
 
                 <Plus size={20} />
@@ -377,16 +707,26 @@ localStorage.setItem(
               </button>
 
               <button
+
                 disabled={loading}
+
                 onClick={handleSubmit}
+
                 className="w-full mt-5 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 text-white py-4 rounded-2xl font-bold flex justify-center items-center gap-3 transition"
+
               >
 
                 <Sparkles size={20} />
 
-                {loading
-                  ? "Submitting..."
-                  : "Submit Donation"}
+                {
+
+                  loading
+
+                    ? "Submitting..."
+
+                    : "Submit Donation"
+
+                }
 
               </button>
 
@@ -399,5 +739,7 @@ localStorage.setItem(
       </div>
 
     </div>
+
   );
+
 }
