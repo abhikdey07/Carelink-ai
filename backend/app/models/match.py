@@ -39,6 +39,7 @@ class Match(Base):
         nullable=False,
     )
 
+
     score = Column(
         Float,
         nullable=False,
@@ -101,3 +102,4 @@ class Match(Base):
     ngo = relationship(
         "NGOProfile",
     )
+ 

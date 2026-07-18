@@ -1,15 +1,16 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 
 from app.database.session import get_db
-
+from app.services.email_service import send_email
 from app.models.pickup_schedule import PickupSchedule
 from app.models.match import Match
 from app.models.donation import Donation
 from app.models.donation_item import DonationItem
 from app.models.user import User
 from app.models.donor_notification import DonorNotification
-
+from app.models.demand import Demand
 router = APIRouter(
     prefix="/delivery",
     tags=["Delivery Partner"],
@@ -109,6 +110,47 @@ def assign_delivery_partner(
 
     db.add(notification)
 
+    donor = (
+        db.query(User)
+        .filter(User.id == donation.donor_id)
+        .first()
+    )
+
+    if donor and donor.email:
+
+        body = f"""
+<p>Hello <b>{donor.full_name}</b>,</p>
+
+<p>
+A delivery partner has been assigned for your donation.
+</p>
+
+<table style="width:100%;border-collapse:collapse;">
+
+<tr>
+<td><b>Volunteer</b></td>
+<td>{volunteer_name}</td>
+</tr>
+
+<tr>
+<td><b>Phone</b></td>
+<td>{volunteer_phone}</td>
+</tr>
+
+</table>
+
+<p>
+The volunteer will arrive according to your scheduled pickup.
+</p>
+"""
+
+        send_email(
+            recipient=donor.email,
+            subject="Delivery Partner Assigned",
+            heading="🚚 Delivery Partner Assigned",
+            body=body,
+        )
+
     db.commit()
     db.refresh(pickup)
 
@@ -152,6 +194,47 @@ def out_for_pickup(
 
     db.add(notification)
 
+    donor = (
+        db.query(User)
+        .filter(User.id == donation.donor_id)
+        .first()
+    )
+
+    if donor and donor.email:
+
+        body = f"""
+<p>Hello <b>{donor.full_name}</b>,</p>
+
+<p>
+Your delivery partner is now on the way to collect your donation.
+</p>
+
+<table style="width:100%;border-collapse:collapse;">
+
+<tr>
+<td><b>Volunteer</b></td>
+<td>{pickup.volunteer_name}</td>
+</tr>
+
+<tr>
+<td><b>Phone</b></td>
+<td>{pickup.volunteer_phone}</td>
+</tr>
+
+</table>
+
+<p>
+Please keep your donation packed and ready for pickup.
+</p>
+"""
+
+        send_email(
+            recipient=donor.email,
+            subject="Volunteer On The Way",
+            heading="🚚 Volunteer On The Way",
+            body=body,
+        )
+
     db.commit()
     db.refresh(pickup)
 
@@ -159,7 +242,6 @@ def out_for_pickup(
         "message": "Out For Pickup",
         "pickup": pickup,
     }
-
 
 # ===========================
 # COLLECTED
@@ -195,6 +277,33 @@ def collected(
     )
 
     db.add(notification)
+
+    donor = (
+        db.query(User)
+        .filter(User.id == donation.donor_id)
+        .first()
+    )
+
+    if donor and donor.email:
+
+        body = f"""
+<p>Hello <b>{donor.full_name}</b>,</p>
+
+<p>
+Your donation has been successfully collected by our delivery partner.
+</p>
+
+<p>
+It will now be transported to the NGO.
+</p>
+"""
+
+        send_email(
+            recipient=donor.email,
+            subject="Donation Collected",
+            heading="📦 Donation Collected",
+            body=body,
+        )
 
     db.commit()
     db.refresh(pickup)
@@ -239,6 +348,33 @@ def in_transit(
 
     db.add(notification)
 
+    donor = (
+        db.query(User)
+        .filter(User.id == donation.donor_id)
+        .first()
+    )
+
+    if donor and donor.email:
+
+        body = f"""
+<p>Hello <b>{donor.full_name}</b>,</p>
+
+<p>
+Your donation is now in transit to the NGO.
+</p>
+
+<p>
+Thank you for your contribution.
+</p>
+"""
+
+        send_email(
+            recipient=donor.email,
+            subject="Donation In Transit",
+            heading="🚚 Donation In Transit",
+            body=body,
+        )
+
     db.commit()
     db.refresh(pickup)
 
@@ -246,8 +382,6 @@ def in_transit(
         "message": "Donation In Transit",
         "pickup": pickup,
     }
-
-
 # ===========================
 # DELIVERED
 # ===========================
@@ -283,6 +417,33 @@ def delivered(
 
     db.add(notification)
 
+    donor = (
+        db.query(User)
+        .filter(User.id == donation.donor_id)
+        .first()
+    )
+
+    if donor and donor.email:
+
+        body = f"""
+<p>Hello <b>{donor.full_name}</b>,</p>
+
+<p>
+Your donation has been successfully delivered to the NGO.
+</p>
+
+<p>
+The NGO will acknowledge it shortly.
+</p>
+"""
+
+        send_email(
+            recipient=donor.email,
+            subject="Donation Delivered",
+            heading="🎉 Donation Delivered",
+            body=body,
+        )
+
     db.commit()
     db.refresh(pickup)
 
@@ -314,7 +475,49 @@ def acknowledged(
     match = pickup.match
     donation = match.donation
 
+    print("NGO ID =", match.ngo_id)
+    print("Donation Item =", match.donation_item.item_name)
+    print("Donation Status =", donation.status)
+
     donation.status = "Acknowledged"
+
+    # ================= DEBUG =================
+
+    all_demands = (
+        db.query(Demand)
+        .filter(Demand.ngo_id == match.ngo_id)
+        .all()
+    )
+
+    print("========== ALL DEMANDS ==========")
+
+    for d in all_demands:
+        print(
+            "ID =", d.id,
+            "| ITEM =", repr(d.item_name),
+            "| STATUS =", repr(d.status),
+        )
+
+    demand = (
+        db.query(Demand)
+        .filter(
+            Demand.ngo_id == match.ngo_id,
+            func.lower(func.trim(Demand.item_name))
+            == match.donation_item.item_name.strip().lower(),
+            Demand.status.in_(["Active", "Open"]),
+        )
+        .first()
+    )
+
+    print("FOUND DEMAND =", demand)
+
+    # =========================================
+
+    if demand:
+        demand.status = "Completed"
+        print("Demand Updated Successfully")
+    else:
+        print("Demand NOT Found")
 
     notification = DonorNotification(
         donor_id=donation.donor_id,
@@ -325,6 +528,34 @@ def acknowledged(
     )
 
     db.add(notification)
+
+    donor = (
+        db.query(User)
+        .filter(User.id == donation.donor_id)
+        .first()
+    )
+
+    if donor and donor.email:
+
+        body = f"""
+<p>Hello <b>{donor.full_name}</b>,</p>
+
+<p>
+The NGO has officially acknowledged your donation.
+</p>
+
+<p>
+Thank you for supporting your community through <b>CareLink AI</b>.
+Your donation has reached its destination and will help people in need.
+</p>
+"""
+
+        send_email(
+            recipient=donor.email,
+            subject="Donation Acknowledged",
+            heading="💙 Donation Acknowledged",
+            body=body,
+        )
 
     db.commit()
     db.refresh(pickup)

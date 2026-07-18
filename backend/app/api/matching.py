@@ -2,13 +2,17 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.database.session import get_db
+
 from app.services.matching_service import generate_matches
+from app.services.email_service import send_email
 
 from app.models.match import Match
 from app.models.donation import Donation
 from app.models.demand import Demand
 from app.models.donation_item import DonationItem
 from app.models.donor_notification import DonorNotification
+from app.models.user import User
+from app.models.ngo_profile import NGOProfile
 
 router = APIRouter(
     prefix="/matching",
@@ -106,6 +110,25 @@ def accept_match(
         .first()
     )
 
+    ngo = (
+        db.query(NGOProfile)
+        .filter(
+            NGOProfile.id == match.ngo_id
+        )
+        .first()
+    )
+
+    donor = None
+
+    if donation:
+        donor = (
+            db.query(User)
+            .filter(
+                User.id == donation.donor_id
+            )
+            .first()
+        )
+
     if donation_item:
 
         demand = (
@@ -120,6 +143,47 @@ def accept_match(
 
         if demand:
             demand.status = "Completed"
+    
+    if donor and donor.email and donation_item and ngo:
+
+        body = f"""
+<p>Hello <b>{donor.full_name}</b>,</p>
+
+<p>
+Great news! Your donation has been accepted by
+<b>{ngo.organization_name}</b>.
+</p>
+
+<table style="width:100%;border-collapse:collapse;">
+
+<tr>
+<td><b>Item</b></td>
+<td>{donation_item.item_name}</td>
+</tr>
+
+<tr>
+<td><b>Quantity</b></td>
+<td>{donation_item.quantity}</td>
+</tr>
+
+<tr>
+<td><b>Condition</b></td>
+<td>{donation_item.condition}</td>
+</tr>
+
+</table>
+
+<p>
+Please log in to CareLink AI and complete the packaging checklist and pickup scheduling.
+</p>
+"""
+
+        send_email(
+            recipient=donor.email,
+            subject="Donation Accepted",
+            heading="🎉 Your Donation Has Been Accepted",
+            body=body,
+        )
 
     db.commit()
 
@@ -165,3 +229,4 @@ def reject_match(
     return {
         "message": "Donation rejected"
     }
+        

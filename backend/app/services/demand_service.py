@@ -7,7 +7,7 @@ from app.schemas.ngo_schema import (
     DemandCreate,
     DemandUpdate,
 )
-
+from app.services.matching_service import generate_matches_for_all_donations
 
 def create_demand(
     ngo_user_id: int,
@@ -49,7 +49,7 @@ def create_demand(
     db.commit()
 
     db.refresh(new_demand)
-
+    generate_matches_for_all_donations(db)
     return new_demand
 
 

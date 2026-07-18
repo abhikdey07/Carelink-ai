@@ -28,8 +28,15 @@ def get_notifications(
     )
 
     data = []
+    seen_matches = set()
 
     for notification in notifications:
+
+        # Skip duplicate notifications for the same match
+        if notification.match_id in seen_matches:
+            continue
+
+        seen_matches.add(notification.match_id)
 
         pickup = (
             db.query(PickupSchedule)

@@ -1,6 +1,7 @@
+from datetime import date, time
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from datetime import date, time
 
 from app.database.session import get_db
 
@@ -8,6 +9,10 @@ from app.models.pickup_schedule import PickupSchedule
 from app.models.match import Match
 from app.models.donation import Donation
 from app.models.notification import Notification
+from app.models.ngo_profile import NGOProfile
+from app.models.user import User
+
+from app.services.email_service import send_email
 
 router = APIRouter(
     prefix="/pickup",
@@ -78,6 +83,59 @@ def schedule_pickup(
     )
 
     db.add(notification)
+
+    ngo = (
+        db.query(NGOProfile)
+        .filter(
+            NGOProfile.id == match.ngo_id
+        )
+        .first()
+    )
+
+    if ngo:
+
+        ngo_user = (
+            db.query(User)
+            .filter(
+                User.id == ngo.user_id
+            )
+            .first()
+        )
+
+        if ngo_user and ngo_user.email:
+
+            body = f"""
+<p>Hello <b>{ngo.organization_name}</b>,</p>
+
+<p>
+A donor has scheduled the pickup for an accepted donation.
+</p>
+
+<table style="width:100%;border-collapse:collapse;">
+
+<tr>
+<td><b>Pickup Date</b></td>
+<td>{pickup_date}</td>
+</tr>
+
+<tr>
+<td><b>Pickup Time</b></td>
+<td>{pickup_time}</td>
+</tr>
+
+</table>
+
+<p>
+Please log in to CareLink AI and assign a delivery partner.
+</p>
+"""
+
+            send_email(
+                recipient=ngo_user.email,
+                subject="Pickup Scheduled",
+                heading="📦 Pickup Scheduled",
+                body=body,
+            )
 
     db.commit()
 

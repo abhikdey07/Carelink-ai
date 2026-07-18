@@ -10,6 +10,8 @@ from app.models.demand import Demand
 from app.models.ngo_profile import NGOProfile
 from app.models.match import Match
 from app.models.notification import Notification
+from app.models.user import User
+from app.services.email_service import send_email
 
 
 model = SentenceTransformer(
@@ -212,7 +214,8 @@ def generate_matches(
 
     if donation is None:
         return []
-
+    if donation.status == "Acknowledged":
+        return []
     items = (
         db.query(DonationItem)
         .filter(
@@ -293,6 +296,19 @@ def generate_matches(
                 f"NGO Minimum : {demand.minimum_condition}, "
                 f"{demand.priority} Priority"
             )
+
+            existing_match = (
+                db.query(Match)
+                .filter(
+                    Match.donation_item_id == item.id,
+                    Match.ngo_id == ngo.id,
+                )
+                .first()
+            )
+
+            if existing_match:
+                continue
+
             match = Match(
 
                 donation_id=donation.id,
@@ -300,6 +316,8 @@ def generate_matches(
                 donation_item_id=item.id,
 
                 ngo_id=ngo.id,
+
+                
 
                 score=total_score,
 
@@ -345,14 +363,83 @@ def generate_matches(
 
             db.commit()
 
+            # -----------------------------
+            # Send email notification to NGO
+            # -----------------------------
+            ngo_user = (
+                db.query(User)
+                .filter(User.id == ngo.user_id)
+                .first()
+            )
+
+            if ngo_user and ngo_user.email:
+
+                body = f"""
+<p>Hello <b>{ngo.organization_name}</b>,</p>
+
+<p>A new donation has matched one of your active demands.</p>
+
+<table style="width:100%;border-collapse:collapse;">
+<tr>
+<td><b>Item</b></td>
+<td>{item.item_name}</td>
+</tr>
+
+<tr>
+<td><b>Quantity</b></td>
+<td>{item.quantity}</td>
+</tr>
+
+<tr>
+<td><b>Condition</b></td>
+<td>{item.condition}</td>
+</tr>
+
+<tr>
+<td><b>Match Score</b></td>
+<td>{total_score}</td>
+</tr>
+
+</table>
+
+<p>
+Please log in to CareLink AI to review and accept this donation.
+</p>
+"""
+
+                send_email(
+                    recipient=ngo_user.email,
+                    subject="New Donation Match",
+                    heading="🎉 New Donation Match Found",
+                    body=body,
+                )
+
             matches.append(match)
 
     return sorted(
-
         matches,
-
         key=lambda match: match.score,
-
         reverse=True,
-
     )
+
+
+def generate_matches_for_all_donations(
+    db: Session,
+):
+
+    donations = (
+        db.query(Donation)
+        .filter(
+            Donation.status != "Acknowledged"
+        )
+        .all()
+    )
+
+    for donation in donations:
+
+        generate_matches(
+            donation.id,
+            db,
+        )
+
+            
