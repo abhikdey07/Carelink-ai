@@ -1,5 +1,3 @@
-import requests
-
 from sqlalchemy.orm import Session
 
 from app.models.user import User
@@ -16,45 +14,6 @@ from app.core.security import (
 )
 
 
-def get_coordinates(address: str):
-
-    try:
-
-        url = "https://nominatim.openstreetmap.org/search"
-
-        response = requests.get(
-
-            url,
-
-            params={
-                "q": address,
-                "format": "json",
-                "limit": 1,
-            },
-
-            headers={
-                "User-Agent": "AI Donation Management System",
-            },
-
-            timeout=10,
-
-        )
-
-        data = response.json()
-
-        if len(data) == 0:
-            return None, None
-
-        return (
-            float(data[0]["lat"]),
-            float(data[0]["lon"]),
-        )
-
-    except Exception:
-
-        return None, None
-
-
 def register_ngo(
     ngo: NGORegister,
     db: Session,
@@ -62,7 +21,9 @@ def register_ngo(
 
     existing = (
         db.query(User)
-        .filter(User.email == ngo.email)
+        .filter(
+            User.email == ngo.email
+        )
         .first()
     )
 
@@ -75,7 +36,9 @@ def register_ngo(
 
         email=ngo.email,
 
-        password=hash_password(ngo.password),
+        password=hash_password(
+            ngo.password
+        ),
 
         phone=ngo.phone,
 
@@ -89,10 +52,6 @@ def register_ngo(
     db.commit()
     db.refresh(user)
 
-    latitude, longitude = get_coordinates(
-        ngo.address
-    )
-
     profile = NGOProfile(
 
         user_id=user.id,
@@ -103,11 +62,10 @@ def register_ngo(
 
         description="",
 
-        latitude=latitude,
+        latitude=ngo.latitude,
 
-        longitude=longitude,
-
-    )
+        longitude=ngo.longitude,
+            )
 
     db.add(profile)
     db.commit()

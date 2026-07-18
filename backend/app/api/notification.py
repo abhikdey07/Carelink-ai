@@ -2,8 +2,11 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.database.session import get_db
+
 from app.models.notification import Notification
 from app.models.pickup_schedule import PickupSchedule
+from app.models.match import Match
+
 
 router = APIRouter(
     prefix="/notifications",
@@ -36,6 +39,25 @@ def get_notifications(
             .first()
         )
 
+        match = (
+            db.query(Match)
+            .filter(
+                Match.id == notification.match_id
+            )
+            .first()
+        )
+
+        # Show Accepted after NGO accepts but before pickup is scheduled.
+        # Once pickup exists, show the pickup/delivery status.
+        if pickup:
+            current_status = pickup.status
+        elif match and match.status == "Accepted":
+            current_status = "Accepted"
+        elif match and match.status == "Rejected":
+            current_status = "Rejected"
+        else:
+            current_status = "Pending"
+
         data.append(
             {
                 "id": notification.id,
@@ -46,10 +68,9 @@ def get_notifications(
                 "message": notification.message,
                 "is_read": notification.is_read,
                 "created_at": notification.created_at,
-
                 "pickup_date": pickup.pickup_date if pickup else None,
                 "pickup_time": pickup.pickup_time if pickup else None,
-                "delivery_status": pickup.status if pickup else "Pending",
+                "delivery_status": current_status,
             }
         )
 

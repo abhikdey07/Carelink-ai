@@ -14,6 +14,9 @@ class NGORegister(BaseModel):
     address: str
     password: str
 
+    latitude: float
+    longitude: float
+
 
 class NGOLogin(BaseModel):
     email: EmailStr
