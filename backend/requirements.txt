@@ -46,3 +46,5 @@ torchvision
 numpy
 email-validator
 google-genai
+sentence-transformers==5.1.0
+scikit-learn==1.7.1
