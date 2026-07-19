@@ -44,3 +44,4 @@ Pillow
 torch
 torchvision
 numpy
+email-validator
