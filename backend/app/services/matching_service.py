@@ -12,7 +12,10 @@ from app.models.match import Match
 from app.models.notification import Notification
 from app.models.user import User
 from app.services.email_service import send_email
-from sentence_transformers import SentenceTransformer
+
+
+_model = None
+
 
 _model = None
 
@@ -22,7 +25,11 @@ def get_embedding_model():
 
     if _model is None:
         print("Loading SentenceTransformer model...")
+
+        from sentence_transformers import SentenceTransformer
+
         _model = SentenceTransformer("all-MiniLM-L6-v2")
+
         print("SentenceTransformer model loaded.")
 
     return _model
