@@ -40,7 +40,7 @@ export default function NGORegister() {
   const [showConfirmPassword, setShowConfirmPassword] =
     useState(false);
 
-  const [location, setLocation] = useState<{
+  const [, setLocation] = useState<{
     latitude: number;
     longitude: number;
   } | null>(null);
