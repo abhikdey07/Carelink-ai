@@ -45,3 +45,4 @@ torch
 torchvision
 numpy
 email-validator
+google-genai
