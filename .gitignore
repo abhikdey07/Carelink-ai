@@ -20,6 +20,7 @@ runs/
 
 # AI Models
 *.pt
+!backend/yolov8n.pt
 
 # OS files
 Thumbs.db

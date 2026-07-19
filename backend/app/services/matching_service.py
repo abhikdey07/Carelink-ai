@@ -1,6 +1,6 @@
 from math import radians, sin, cos, sqrt, atan2
 
-from sentence_transformers import SentenceTransformer
+
 from sklearn.metrics.pairwise import cosine_similarity
 from sqlalchemy.orm import Session
 
@@ -12,11 +12,22 @@ from app.models.match import Match
 from app.models.notification import Notification
 from app.models.user import User
 from app.services.email_service import send_email
+from sentence_transformers import SentenceTransformer
+
+_model = None
 
 
-model = SentenceTransformer(
-    "all-MiniLM-L6-v2"
-)
+def get_embedding_model():
+    global _model
+
+    if _model is None:
+        print("Loading SentenceTransformer model...")
+        _model = SentenceTransformer("all-MiniLM-L6-v2")
+        print("SentenceTransformer model loaded.")
+
+    return _model
+
+
 
 
 def calculate_quantity_score(
@@ -182,12 +193,20 @@ def semantic_similarity(
     demand_item: str,
 ):
 
-    emb1 = model.encode(
-        [donation_item]
-    )
+    model = get_embedding_model()
 
-    emb2 = model.encode(
-        [demand_item]
+    emb1 = model.encode([donation_item])
+
+    emb2 = model.encode([demand_item])
+
+    similarity = cosine_similarity(
+        emb1,
+        emb2,
+    )[0][0]
+
+    return round(
+        float(similarity),
+        4,
     )
 
     similarity = cosine_similarity(

@@ -13,7 +13,18 @@ API_KEY = os.getenv("GEMINI_API_KEY")
 if not API_KEY:
     raise ValueError("GEMINI_API_KEY not found in .env")
 
-client = genai.Client(api_key=API_KEY)
+_client = None
+
+
+def get_gemini_client():
+    global _client
+
+    if _client is None:
+        print("Initializing Gemini client...")
+        _client = genai.Client(api_key=API_KEY)
+        print("Gemini client initialized.")
+
+    return _client
 
 # ==========================================================
 # Standard Donation Item Names
@@ -241,7 +252,7 @@ Never use markdown.
 
 Return JSON only.
 """
-
+    client = get_gemini_client()
     response = client.models.generate_content(
         model="gemini-flash-latest",
         contents=[
