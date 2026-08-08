@@ -17,11 +17,36 @@ import {
   getDonorNotifications,
   markDonorNotificationRead,
 } from "../../services/donorNotificationService";
-
+import { translateDashboard } from "../../services/translationService";
 import { Bell } from "lucide-react";
 import type { DashboardStats } from "../../services/dashboardService";
 
 export default function Dashboard() {
+  const dashboardTexts = [
+  "Welcome",
+  "Ready to donate something today?",
+  "Logout",
+  "Start New Donation",
+   "My Profile",
+  "Open the AI Camera and detect donation items instantly.",
+  "AI Matching Results",
+  "View NGOs matched by the Intelligent Matching Engine.",
+  "Total Donations",
+  "Successfully Submitted",
+  "Items Donated",
+  "AI Detected",
+  "Pending Donations",
+  "Waiting for NGO Review",
+  "Last Donation",
+  "Latest Activity",
+  "Recent Donations",
+  "Matching Results",
+  "View All",
+  "No Donations Yet",
+  "Start your first donation using the AI Camera.",
+  "Start Donation",
+  "View Matches"
+];
 
   const navigate = useNavigate();
 
@@ -30,12 +55,21 @@ export default function Dashboard() {
   );
 
   const [stats, setStats] =
-    useState<DashboardStats | null>(null);
+  useState<DashboardStats | null>(null);
 
-  const [loading, setLoading] =
-    useState(true);
-    const [notifications, setNotifications] =
+const [loading, setLoading] =
+  useState(true);
+
+const [notifications, setNotifications] =
   useState<any[]>([]);
+
+// NEW
+const [language, setLanguage] =
+  useState("en-IN");
+
+// NEW
+const [translations, setTranslations] =
+  useState<any>({});
 
   useEffect(() => {
 
@@ -107,6 +141,43 @@ setNotifications(notificationData);
     };
 
   }, []);
+  useEffect(() => {
+
+  const loadTranslations = async () => {
+
+    if (language === "en-IN") {
+
+      const english: any = {};
+
+      dashboardTexts.forEach((text) => {
+        english[text] = text;
+      });
+
+      setTranslations(english);
+      return;
+
+    }
+
+    try {
+
+      const translated = await translateDashboard(
+        dashboardTexts,
+        language
+      );
+
+      setTranslations(translated);
+
+    } catch (error) {
+
+      console.error("Translation Error:", error);
+
+    }
+
+  };
+
+  loadTranslations();
+
+}, [language]);
 const openNotification = async (
   notification: any
 ) => {
@@ -198,7 +269,7 @@ const openNotification = async (
 
             <h1 className="text-5xl font-black">
 
-              Welcome,
+               {translations["Welcome"] || "Welcome"},
 
             </h1>
 
@@ -210,22 +281,40 @@ const openNotification = async (
 
             <p className="text-gray-500 mt-4">
 
-              Ready to donate something today?
+              {translations["Ready to donate something today?"] ||
+    "Ready to donate something today?"}
 
             </p>
 
           </div>
+           
+          <div className="flex items-center gap-4">
 
-          <button
-            onClick={logout}
-            className="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-2xl flex items-center gap-3 transition"
-          >
+  <select
+    value={language}
+    onChange={(e) => setLanguage(e.target.value)}
+    className="border border-gray-300 rounded-xl px-4 py-3 bg-white"
+  >
+    <option value="en-IN">English</option>
+    <option value="hi-IN">Hindi</option>
+    <option value="bn-IN">Bengali</option>
+  </select>
+  <button
+  onClick={() => navigate("/donor/profile")}
+  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-2xl flex items-center gap-2 transition"
+>
+  👤 {translations["My Profile"] || "My Profile"}
+</button>
 
-            <LogOut size={20} />
+  <button
+    onClick={logout}
+    className="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-2xl flex items-center gap-3 transition"
+  >
+    <LogOut size={20} />
+    {translations["Logout"] || "Logout"}
+  </button>
 
-            Logout
-
-          </button>
+</div>
 
         </motion.div>
 {notifications
@@ -295,13 +384,17 @@ const openNotification = async (
 
               <h2 className="text-4xl font-black">
 
-                Start New Donation
+                 {translations["Start New Donation"] ||
+    "Start New Donation"}
 
               </h2>
 
               <p className="mt-4 text-blue-100 text-lg">
 
-                Open the AI Camera and detect donation items instantly.
+                {translations[
+    "Open the AI Camera and detect donation items instantly."
+  ] ||
+    "Open the AI Camera and detect donation items instantly."}
 
               </p>
 
@@ -331,13 +424,21 @@ const openNotification = async (
 
               <h2 className="text-4xl font-black">
 
-                AI Matching Results
+                {translations["AI Matching Results"] ||
+    "AI Matching Results"}
 
               </h2>
 
               <p className="mt-4 text-green-100 text-lg">
 
-                View NGOs matched by the Intelligent Matching Engine.
+                <p className="mt-4 text-green-100 text-lg">
+
+  {translations[
+    "View NGOs matched by the Intelligent Matching Engine."
+  ] ||
+    "View NGOs matched by the Intelligent Matching Engine."}
+
+</p>
 
               </p>
 
@@ -365,7 +466,8 @@ const openNotification = async (
 
                 <p className="text-gray-500 text-lg">
 
-                  Total Donations
+                   {translations["Total Donations"] ||
+    "Total Donations"}
 
                 </p>
 
@@ -377,8 +479,8 @@ const openNotification = async (
 
                 <p className="text-green-600 font-semibold mt-3">
 
-                  Successfully Submitted
-
+                  {translations["Successfully Submitted"] ||
+    "Successfully Submitted"}
                 </p>
 
               </div>
@@ -409,7 +511,8 @@ const openNotification = async (
 
                 <p className="text-gray-500 text-lg">
 
-                  Items Donated
+                  {translations["Items Donated"] ||
+    "Items Donated"}
 
                 </p>
 
@@ -421,7 +524,8 @@ const openNotification = async (
 
                 <p className="text-green-600 font-semibold mt-3">
 
-                  AI Detected
+                  {translations["AI Detected"] ||
+    "AI Detected"}
 
                 </p>
 
@@ -453,7 +557,8 @@ const openNotification = async (
 
                 <p className="text-gray-500 text-lg">
 
-                  Pending Donations
+                  {translations["Pending Donations"] ||
+    "Pending Donations"}
 
                 </p>
 
@@ -465,7 +570,8 @@ const openNotification = async (
 
                 <p className="text-orange-500 font-semibold mt-3">
 
-                  Waiting for NGO Review
+                 {translations["Waiting for NGO Review"] ||
+    "Waiting for NGO Review"}
 
                 </p>
 
@@ -497,7 +603,8 @@ const openNotification = async (
 
                 <p className="text-gray-500 text-lg">
 
-                  Last Donation
+                   {translations["Last Donation"] ||
+    "Last Donation"}
 
                 </p>
 
@@ -509,7 +616,8 @@ const openNotification = async (
 
                 <p className="text-blue-600 font-semibold mt-3">
 
-                  Latest Activity
+                  {translations["Latest Activity"] ||
+    "Latest Activity"}
 
                 </p>
 
@@ -548,7 +656,8 @@ const openNotification = async (
 
             <h2 className="text-3xl font-black">
 
-              Recent Donations
+              {translations["Recent Donations"] ||
+    "Recent Donations"}
 
             </h2>
 
@@ -561,7 +670,8 @@ const openNotification = async (
                 className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-2xl font-semibold transition"
               >
 
-                Matching Results
+                {translations["Matching Results"] ||
+"Matching Results"}
 
               </button>
 
@@ -572,7 +682,8 @@ const openNotification = async (
                 className="flex items-center gap-2 text-blue-600 font-semibold"
               >
 
-                View All
+                {translations["View All"] ||
+"View All"}
 
                 <ArrowRight size={18} />
 

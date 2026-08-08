@@ -395,11 +395,31 @@ export default function NGODashboard() {
 
           <div className="bg-white rounded-3xl shadow-xl p-8">
 
-            <h2 className="text-2xl font-bold mb-6">
+            <div className="flex justify-between items-center mb-6">
 
-              NGO Information
+  <h2 className="text-2xl font-bold">
+    NGO Information
+  </h2>
 
-            </h2>
+  <div className="flex gap-3">
+
+    <button
+      onClick={() => navigate("/ngo/profile")}
+      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl"
+    >
+      Edit Details
+    </button>
+
+    <button
+      onClick={() => navigate("/ngo/impact-metrics")}
+      className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl"
+    >
+      Impact Metrics
+    </button>
+
+  </div>
+
+</div>
 
             <div className="space-y-5">
 

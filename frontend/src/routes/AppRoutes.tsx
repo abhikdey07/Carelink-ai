@@ -9,6 +9,7 @@ import Dashboard from "../pages/donor/Dashboard";
 import Camera from "../pages/donor/Camera";
 import Cart from "../pages/donor/Cart";
 import History from "../pages/donor/History";
+import Profile from "../pages/donor/Profile";
 import Success from "../pages/donor/Success";
 import MatchResults from "../pages/donor/MatchResults";
 import PackagingChecklist from "../pages/donor/PackagingChecklist";
@@ -26,9 +27,10 @@ import MatchedDonations from "../pages/ngo/MatchedDonations";
 import MatchDetails from "../pages/ngo/MatchDetails";
 import DeliveryManagement from "../pages/ngo/DeliveryManagement";
 import DeliveryDetails from "../pages/ngo/DeliveryDetails";
+import NGOProfile from "../pages/ngo/Profile";
 
 import ProtectedRoute from "../components/ProtectedRoute";
-
+import NGOImpactMetrics from "../pages/ngo/ImpactMetrics";
 export default function AppRoutes() {
   return (
     <Routes>
@@ -80,6 +82,14 @@ export default function AppRoutes() {
           </ProtectedRoute>
         }
       />
+      <Route
+  path="/donor/profile"
+  element={
+    <ProtectedRoute>
+      <Profile />
+    </ProtectedRoute>
+  }
+/>
 
       <Route
         path="/donor/success"
@@ -136,6 +146,22 @@ export default function AppRoutes() {
           </ProtectedRoute>
         }
       />
+      <Route
+  path="/ngo/impact-metrics"
+  element={
+    <ProtectedRoute>
+      <NGOImpactMetrics />
+    </ProtectedRoute>
+  }
+/>
+      <Route
+  path="/ngo/profile"
+  element={
+    <ProtectedRoute>
+      <NGOProfile />
+    </ProtectedRoute>
+  }
+/>
 
       <Route
         path="/ngo/demand/add"

@@ -14,6 +14,8 @@ from app.api.notification import router as notification_router
 from app.api.match_transparency import router as transparency_router
 from app.api.donor_notification import router as donor_notification_router
 from app.api.delivery import router as delivery_router
+from app.api.translation import router as translation_router
+from app.api.profile import router as profile_router
 
 
 app = FastAPI(
@@ -37,6 +39,16 @@ app.include_router(transparency_router)
 app.include_router(donor_notification_router)
 app.include_router(delivery_router)
 
+# Translation API
+app.include_router(
+    translation_router,
+    prefix="/translate-dashboard",
+    tags=["Translation"]
+)
+
+# Profile API
+app.include_router(profile_router)
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -54,11 +66,7 @@ app.add_middleware(
 def root():
 
     return {
-
         "project": "AI Donation Management System",
-
         "status": "Backend Running",
-
         "version": "1.0.0",
-
     }

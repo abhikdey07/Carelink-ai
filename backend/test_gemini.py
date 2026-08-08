@@ -1,8 +1,15 @@
-from app.services.gemini_service import analyze_image
+from google import genai
+from dotenv import load_dotenv
+import os
 
-print("Starting Gemini Test...")
+load_dotenv()
 
-result = analyze_image("uploads/test.jpg")
+client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
-print("\nGemini Response:")
-print(result)
+response = client.models.generate_content(
+    model="gemini-3.5-flash",
+    contents="Hello"
+)
+
+print("MODEL USED:", response.model_version)
+print(response.text)
